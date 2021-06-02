@@ -31,10 +31,16 @@ kind: Service
 metadata:
   name: server-api
 spec:
-  type: ClusterIP
+  type: LoadBalancer
+  clusterIP: 10.96.5.11
   selector:
     app: server-api
   ports:
   - name: service
     port: 8080
+    nodePort: 30100
     targetPort: 8080
+status:
+  loadBalancer:
+    ingress:
+    - ip: 10.96.5.10
