@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client
+spec:
+  selector:
+    matchLabels:
+      app: client
+  template:
+    metadata:
+      labels:
+        app: client
+      annotations:
+        sidecar.istio.io/rewriteAppHTTPProbers: "true"
+    spec:
+      containers:
+        - name: server
+          image: ajaypspk/client:latest
+          imagePullPolicy: Always
+          ports:
+          - containerPort: 3000
+          readinessProbe:
+            initialDelaySeconds: 10
+            httpGet:
+              path: "/"
+              port: 3000
+              httpHeaders:
+              - name: "Cookie"
+                value: "shop_session-id=x-readiness-probe"
+          livenessProbe:
+            initialDelaySeconds: 10
+            httpGet:
+              path: "/"
+              port: 3000
+              httpHeaders:
+              - name: "Cookie"
+                value: "shop_session-id=x-liveness-probe"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: client-external
+spec:
+  type: LoadBalancer
+  selector:
+    app: client
+  ports:
+  - name: http
+    port: 80
+    nodePort: 30100
+    targetPort: 3000
